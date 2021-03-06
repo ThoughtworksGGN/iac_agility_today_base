@@ -36,10 +36,17 @@ If it’s hyperkit, move on to the next step.
 
  _(connect host CLI to docker runtime inside minikube - need to do it every time on new terminal window)_
 
+######_Copy certificates to .kube folder (Required only if you want to run deployment on jenkins. For local, uncomment commented code in provide.tf and comment  line #1-7_)
+
+```$xslt
+cp ~/.minikube/ca.crt ~/.kube/client-ca-cert.pem
+cp ~/.minikube/profiles/minikube/client.crt ~/.kube/client-cert.pem
+cp ~/.minikube/profiles/minikube/client.key ~/.kube/client-key.pem
+```
 
 **Setup Jenkins on Minikube**
 
-Install Helm
+Install Helm (https://helm.sh/docs/intro/install/)
 
 `brew install helm`
 
@@ -63,25 +70,12 @@ Install Jenkins workload on Minikube instance
 
 `helm install jenkins -f jenkins/jenkins-values.yaml jenkinsci/jenkins`
 
-Access Jenkins service
+######**_Note: This would roughly take around 15-20mins_**
 
-`minikube service jenkins`
-
-Get Jenkins admin user password for login
-
-`kubectl get secret jenkins -o jsonpath="{.data.jenkins-admin-password}" | base64 --decode`
-
-Copy certificates to .kube folder
-
-```$xslt
-cp ~/.minikube/ca.crt ~/.kube/client-ca-cert.pem
-cp ~/.minikube/profiles/minikube/client.crt ~/.kube/client-cert.pem
-cp ~/.minikube/profiles/minikube/client.key ~/.kube/client-key.pem
-```
 
 **Run the following commands to be able to run Deployment on Jenkins**
 
-`kubectl exec -it jenkins-0 /bin/sh` > `mkdir .kube` > `exit`
+`kubectl exec -it jenkins-0 /bin/sh` > `cd /root` > `mkdir .kube` > `exit`
 
 ```$xslt
 kubectl cp  ~/.kube/client-cert.pem jenkins-0:/root/.kube/client-cert.pem
@@ -89,7 +83,28 @@ kubectl cp  ~/.kube/client-key.pem jenkins-0:/root/.kube/client-key.pem
 kubectl cp  ~/.kube/client-ca-cert.pem jenkins-0:/root/.kube/client-ca-cert.pem
 ```
  
+Once done, Access Jenkins service
+           
+`minikube service jenkins` 
 
+Get Jenkins admin user password for login
+
+`kubectl get secret jenkins -o jsonpath="{.data.jenkins-admin-password}" | base64 --decode`
+
+On the Jenkins UI, perform the following steps:
+- Go to `Manage Jenkins` and click on `Global Tool Configuration`
+- Under `Terraform`, click on `Terraform Installations` > `AddTerraform` > `Install from bintray.com` > Select version `Terraform 0.14.7 linux(amd 64)` from the dropdown.
+- Click on `Save`
+- Go to the Home Page and click on `Free Style Project`. Give any name to the Project.
+- Under `General` Tab, click on the checkbox, `This Project is parameterized` and add a `String` parameter `minikube_ip`
+- Under `Source Code Management`, select `Git` and add the URL: `https://github.com/ThoughtworksGGN/iac_agility_today_base.git`
+- Under `Build Environment`, select `Terraform`
+- Under Build, execute the following shell script
+```bash
+    cd $WORKSPACE/platform/terraform
+    /var/jenkins_home/tools/org.jenkinsci.plugins.terraform.TerraformInstallation/terraform/terraform init
+    /var/jenkins_home/tools/org.jenkinsci.plugins.terraform.TerraformInstallation/terraform/terraform apply --auto-approve -var minikube_ip=${minikube_ip}
+```
 
 **Deploy `metadata-service` application using terraform on single node k8s cluster i.e, Minikube**
 
