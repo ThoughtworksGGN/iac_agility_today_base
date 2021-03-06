@@ -71,10 +71,29 @@ Get Jenkins admin user password for login
 
 `kubectl get secret jenkins -o jsonpath="{.data.jenkins-admin-password}" | base64 --decode`
 
+Copy certificates to .kube folder
+
+```$xslt
+cp ~/.minikube/ca.crt ~/.kube/client-ca-cert.pem
+cp ~/.minikube/profiles/minikube/client.crt ~/.kube/client-cert.pem
+cp ~/.minikube/profiles/minikube/client.key ~/.kube/client-key.pem
+```
+
+**Run the following commands to be able to run Deployment on Jenkins**
+
+`kubectl exec -it jenkins-0 /bin/sh` > `mkdir .kube` > `exit`
+
+```$xslt
+kubectl cp  ~/.kube/client-cert.pem jenkins-0:/root/.kube/client-cert.pem
+kubectl cp  ~/.kube/client-key.pem jenkins-0:/root/.kube/client-key.pem
+kubectl cp  ~/.kube/client-ca-cert.pem jenkins-0:/root/.kube/client-ca-cert.pem
+```
+ 
+
 
 **Deploy `metadata-service` application using terraform on single node k8s cluster i.e, Minikube**
 
-`terraform apply --auto-approve`
+`terraform apply --auto-approve -var minikube_ip=<minikube ip>`
 
 
 TF K8S Source: https://learn.hashicorp.com/tutorials/terraform/kubernetes-provider?in=terraform/use-case
