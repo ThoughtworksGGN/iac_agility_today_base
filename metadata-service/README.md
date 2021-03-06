@@ -9,26 +9,21 @@ Metadata service is similar to config service. It hold the metadata/config requi
 
 ```$xslt
 # to validate Application is up and running (More endpoints [here](https://docs.spring.io/spring-boot/docs/current/reference/html/production-ready-features.html#production-ready-endpoints))
- curl -X GET  http://192.168.64.12:32323/actuator/info
 
-GET /actuator/info
+curl -X GET  http://<minikube_ip>:32323/actuator/info
 ```
 
 ```$xslt
 # to store metadata to DB
-curl -X POST -H 'Content-Type: application/json' --data '{"name":"manali","group":"TW","value":"abcd"}'  http://192.168.64.12:32323/metadata
 
-POST /metadata {
-   "group": "agilitytoday",
-   "name": "company",
-   "value": "Thoughtworks"
-}
+curl -X POST -H 'Content-Type: application/json' --data '{"name":"company","group":"agilitytoday","value":"Thoughtworks"}'  http://<minikube_ip>:32323/metadata
+
 ```
 
 ```$xslt
 # to get metadata from DB
-curl -X GET  http://192.168.64.12:32323/metadata  
-GET /metadata
+
+curl -X GET  http://<minikube_ip>:32323/metadata  
 ```
 
 ## DB Configiuration
