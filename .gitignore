@@ -1,0 +1,6 @@
+*.iml
+**/target/**
+**/.idea/**
+metadata-service.log
+**tfstate**
+**/.terraform/**
